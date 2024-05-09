@@ -1,0 +1,1 @@
+(function(t,e){typeof exports=="object"&&typeof module<"u"?module.exports=e():typeof define=="function"&&define.amd?define(e):(t=typeof globalThis<"u"?globalThis:t||self,t.fire=e())})(this,function(){"use strict";const t="help module",e=Date.now(),i=()=>{console.log("fire",e)};return i.fire=i,i.time=e,i.time3=e,i.time2=e,i.help=t,i});

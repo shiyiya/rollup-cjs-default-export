@@ -3,11 +3,11 @@ import { cjs } from '../src/index'
 
 const config = defineConfig({
   build: {
-    sourcemap: true,
+    sourcemap: false,
     lib: {
       name: 'fire',
       entry: './index.ts',
-      formats: ['umd', 'es'],
+      formats: ['umd', 'es', 'cjs', 'iife'],
     },
   },
   plugins: [cjs()],

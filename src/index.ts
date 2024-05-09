@@ -23,7 +23,7 @@ enum ExpType {
 
 export function cjs(): Plugin {
   return {
-    name: 'vite-plugin-cjs-default-export',
+    name: 'vite-plugin-merge-exports',
 
     async config({ build }) {
       if (!build?.lib) return
@@ -41,7 +41,6 @@ export function cjs(): Plugin {
 
     async transform(code, id) {
       if (!entry || !entry.includes(id)) return
-      const s = new MagicString(code)
       const { body } = ast(code, {
         ecmaVersion: 'latest',
         sourceType: 'module',
@@ -49,17 +48,6 @@ export function cjs(): Plugin {
 
       let hostName: string | undefined
       let exports: (ExportNamedDeclaration | ExportAllDeclaration)[] = []
-
-      /**
-       * // TODO: 多次从同一模块导入导出
-        export { help } from './helper'
-        export * as helper from './helper'
-
-        import helper from './helper'
-        host.${helper} = helper
-        host.${help} = helper.help
-      */
-      let imports = []
 
       for (const node of body) {
         if (node.type == ExpType.ExportDefaultDeclaration) {
@@ -71,39 +59,56 @@ export function cjs(): Plugin {
 
       if (!hostName) return null
 
-      let gen = '\r\n'
+      let gen: string[] = []
+      const s = new MagicString(code)
+      /**
+        // TODO: 多次从同一模块导入导出
+        export { help } from './helper'
+        export * as helper from './helper'
+
+        import helper from './helper'
+        host.${helper} = helper
+        host.${help} = helper.help
+      */
+      let imports = []
 
       exports.map((node) => {
-        if (node.type == ExpType.ExportAllDeclaration) {
-          s.remove(node.start, node.end)
-          if (node.source) {
-            s.append(`import ${(node.exported as Identifier).name} from '${node.source.value}'\r\n`)
-            gen += `${hostName}.${(node.exported as Identifier).name} = ${(node.exported as Identifier).name}\r\n`
-          }
-        } else if (node.declaration) {
-          // export var
-          s.remove(node.start, node.start + 'export'.length + 1)
+        // @ts-ignore
+        const { type, start, end, source, exported } = node
 
-          const declarationName = (
-            ((node.declaration as VariableDeclaration).declarations as VariableDeclarator[])[0].id as Identifier
-          ).name
-          gen += `${hostName}.${declarationName} = ${declarationName}\r\n`
+        // export * from ''
+        if (type == ExpType.ExportAllDeclaration) {
+          s.remove(start, end)
+
+          gen.push(`import ${(exported as Identifier).name} from '${source.value}'`)
+          gen.push(`${hostName}.${(exported as Identifier).name} = ${(exported as Identifier).name}`)
+
+          return
+        }
+
+        const { declaration, specifiers } = node
+
+        if (declaration) {
+          // export var
+          s.remove(start, start + 'export'.length + 1)
+
+          const declarationName = ((declaration as VariableDeclaration).declarations[0].id as Identifier).name
+          gen.push(`${hostName}.${declarationName} = ${declarationName}`)
         } else {
-          s.remove(node.start, node.end)
           // export x from 'x'
-          node.specifiers.map((sp) => {
-            gen += `${hostName}.${(sp.exported as Identifier).name} = ${(sp.local as Identifier).name}\r\n`
+          s.remove(start, end)
+
+          specifiers.map((sp) => {
+            gen.push(`${hostName}.${(sp.exported as Identifier).name} = ${(sp.local as Identifier).name}`)
           })
 
-          if (node.source) {
-            s.append(
-              `import { ${node.specifiers.map((sp) => (sp.local as Identifier).name)} } from '${node.source.value}'`
-            )
+          if (source) {
+            gen.push(`import { ${specifiers.map((sp) => (sp.local as Identifier).name)} } from '${source.value}'`)
           }
         }
       })
 
-      s.append(gen)
+      s.append(gen.join('\r\n'))
 
       return {
         code: s.toString(),
