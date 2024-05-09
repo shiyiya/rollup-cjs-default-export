@@ -28,15 +28,16 @@
     "@types/resolve": "^1.20.5",
     "rollup": "^4.4.0",
     "typescript": "^5.2.2",
-    "vite": "^5.2.11"
+    "vite": "^5.2.11",
+    "vitest": "^1.6.0"
   },
   "bugs": {
     "url": "https://github.com/shiyiya/vite-plugin-merge-exports/issues"
   },
   "homepage": "https://github.com/shiyiya/vite-plugin-merge-exports#readme",
   "dependencies": {
-    "magic-string": "^0.30.5",
-    "acorn": "^8.11.3"
+    "acorn": "^8.11.3",
+    "magic-string": "^0.30.5"
   },
   "peerDependencies": {
     "vite": "^4 || ^5"

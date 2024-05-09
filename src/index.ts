@@ -2,16 +2,7 @@ import MagicString from 'magic-string'
 import path from 'node:path'
 import { cwd } from 'node:process'
 import { type Plugin } from 'vite'
-import {
-  ExportAllDeclaration,
-  ExportNamedDeclaration,
-  Identifier,
-  ModuleDeclaration,
-  Statement,
-  VariableDeclaration,
-  VariableDeclarator,
-  parse as ast,
-} from 'acorn'
+import { ExportAllDeclaration, ExportNamedDeclaration, Identifier, VariableDeclaration, parse as ast } from 'acorn'
 
 let entry: string[]
 
@@ -25,8 +16,10 @@ export function cjs(): Plugin {
   return {
     name: 'vite-plugin-merge-exports',
 
-    async config({ build }) {
-      if (!build?.lib) return
+    apply: 'build',
+
+    configResolved({ build }) {
+      if (!build.lib) return
 
       const resolvedEntry = typeof build.lib.entry == 'object' ? Object.values(build.lib.entry) : [build.lib.entry]
 
@@ -41,6 +34,7 @@ export function cjs(): Plugin {
 
     async transform(code, id) {
       if (!entry || !entry.includes(id)) return
+
       const { body } = ast(code, {
         ecmaVersion: 'latest',
         sourceType: 'module',
@@ -61,27 +55,24 @@ export function cjs(): Plugin {
 
       let gen: string[] = []
       const s = new MagicString(code)
-      /**
-        // TODO: 多次从同一模块导入导出
-        export { help } from './helper'
-        export * as helper from './helper'
-
-        import helper from './helper'
-        host.${helper} = helper
-        host.${help} = helper.help
-      */
-      let imports = []
 
       exports.map((node) => {
         // @ts-ignore
         const { type, start, end, source, exported } = node
 
-        // export * from ''
         if (type == ExpType.ExportAllDeclaration) {
           s.remove(start, end)
 
-          gen.push(`import ${(exported as Identifier).name} from '${source.value}'`)
-          gen.push(`${hostName}.${(exported as Identifier).name} = ${(exported as Identifier).name}`)
+          if (!exported) {
+            // export * from ''
+            const moduleId = `__VITE__PLUGIN__MERGE_EXPORTS__${Date.now()}`
+            gen.push(`import * as ${moduleId} from '${source.value}'`)
+            gen.push(`Object.assign(${hostName}, ${moduleId})`)
+          } else {
+            // export * as x from ''
+            gen.push(`import * as ${(exported as Identifier).name} from '${source.value}'`)
+            gen.push(`${hostName}.${(exported as Identifier).name} = ${(exported as Identifier).name}`)
+          }
 
           return
         }
@@ -98,13 +89,13 @@ export function cjs(): Plugin {
           // export x from 'x'
           s.remove(start, end)
 
-          specifiers.map((sp) => {
-            gen.push(`${hostName}.${(sp.exported as Identifier).name} = ${(sp.local as Identifier).name}`)
-          })
-
           if (source) {
             gen.push(`import { ${specifiers.map((sp) => (sp.local as Identifier).name)} } from '${source.value}'`)
           }
+
+          specifiers.map((sp) => {
+            gen.push(`${hostName}.${(sp.exported as Identifier).name} = ${(sp.local as Identifier).name}`)
+          })
         }
       })
 

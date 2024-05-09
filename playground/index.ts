@@ -11,15 +11,14 @@ export const fire = () => {
   console.log('fire', time)
 }
 
-// TODO
+// TODO: export member
 // export const o = obj.name
 
 export { time, time as time3 }
-
 export { time as time2 }
 
-// TODO: tother
-export { help } from './helper'
-// export * as helper from './helper'
+export { help, helphelp } from './helper'
+export * as helper from './helper'
+export * from './helper'
 
 export default fire
