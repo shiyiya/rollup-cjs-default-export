@@ -18,7 +18,9 @@
   "repository": {
     "url": "https://github.com/shiyiya/vite-plugin-merge-exports"
   },
-  "scripts": {},
+  "scripts": {
+    "test": "vitest"
+  },
   "keywords": [
     "vite"
   ],

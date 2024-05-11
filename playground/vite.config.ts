@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import { cjs } from '../src/index'
+import { plugin } from '../src/index'
 
 const config = defineConfig({
   build: {
@@ -11,7 +11,7 @@ const config = defineConfig({
       formats: ['umd', 'es', 'cjs', 'iife'],
     },
   },
-  plugins: [cjs()],
+  plugins: [plugin()],
 })
 
 export default config

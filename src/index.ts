@@ -12,7 +12,7 @@ enum ExpType {
   ExportAllDeclaration = 'ExportAllDeclaration',
 }
 
-export function cjs(): Plugin {
+export function plugin(): Plugin {
   return {
     name: 'vite-plugin-merge-exports',
 
@@ -23,17 +23,16 @@ export function cjs(): Plugin {
 
       const resolvedEntry = typeof build.lib.entry == 'object' ? Object.values(build.lib.entry) : [build.lib.entry]
 
-      // TODO: 路径兼容问题
       entry = resolvedEntry.map((it) => {
-        if (it.startsWith('.')) {
-          return path.join(cwd(), it).replace(new RegExp(`\\${path.sep}`, 'g'), '/')
+        if (!path.isAbsolute(it)) {
+          return path.normalize(path.join(cwd(), it)).replace(new RegExp(`\\${path.sep}`, 'g'), '/')
         }
-        return it.replace(new RegExp(`${path.sep}`, 'g'), '/')
+        return path.normalize(it).replace(new RegExp(`\\${path.sep}`, 'g'), '/')
       })
     },
 
     async transform(code, id) {
-      if (!entry || !entry.includes(id)) return
+      if (!entry || !entry.includes(id.replace(new RegExp(`\\${path.sep}`, 'g'), '/'))) return
 
       const { body } = ast(code, {
         ecmaVersion: 'latest',
