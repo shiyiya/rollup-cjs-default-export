@@ -10,9 +10,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - run: npm ci
-      - run: npm test
-      - uses: codecov/codecov-action@v3
-        with:
-          fail_ci_if_error: true
-          verbose: true
+      - run: npm i yarn -g
+      - run: yarn
+      - run: yarn run test

@@ -6,6 +6,24 @@ Auto merge exports
 npm i vite-plugin-merge-exports
 ```
 
+```ts
+import { defineConfig } from 'vite'
+import { plugin } from 'vite-plugin-merge-exports'
+
+const config = defineConfig({
+  build: {
+    lib: {
+      name: 'named',
+      entry: './index.ts',
+      formats: ['umd'],
+    },
+  },
+  plugins: [plugin()],
+})
+
+export default config
+```
+
 ```js
 export { a, b as c }
 export default named

@@ -1,9 +1,8 @@
-import { Plugin, UserConfig, build, resolveConfig } from 'vite'
-import { plugin } from '../src'
+import { Plugin, UserConfig, build } from 'vite'
 import { describe, expect, it } from 'vitest'
-import { RollupOutput } from 'rollup'
+import { plugin } from '.'
 
-const mockEntry = (code, cb: (code: string) => void) => ({
+const mockEntry = (code) => ({
   name: 'mockEntry',
   enforce: 'pre',
   resolveId(id) {
@@ -37,7 +36,7 @@ const config = (code: string, cb: any) =>
         formats: ['umd', 'es', 'cjs', 'iife'],
       },
     },
-    plugins: [mockEntry(code, cb), plugin(), resolveBundle(cb)],
+    plugins: [mockEntry(code), plugin(), resolveBundle(cb)],
   } as UserConfig)
 
 describe('main', async () => {
