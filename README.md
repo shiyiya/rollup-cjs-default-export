@@ -25,20 +25,14 @@ export default config
 ```
 
 ```js
+export default jq
 export { a, b as c }
-export default named
-export * from named
-export * as d from named
+export * as d from jq
 
-// export const e = a.x
 
-// to
-module.exports = named
-module.default = named
-named.a = a
-named.c = b
-Object.assign(named, named)
-name.d = named
-
-const { a, b } = require('package')
+// export all in one
+export default jq
+jq.a = a;
+jq.c = b
+jq.d = jq
 ```

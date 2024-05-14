@@ -33,18 +33,27 @@ const config = (code: string, cb: any) =>
       lib: {
         name: 'fire',
         entry: 'virtual:module',
-        formats: ['umd', 'es', 'cjs', 'iife'],
+        formats: ['umd'],
       },
     },
     plugins: [mockEntry(code), plugin(), resolveBundle(cb)],
   } as UserConfig)
 
 describe('main', async () => {
-  it('export named and default', async () => {
+  it('export default jq; export { a }', async () => {
     const code = `const jq = function(){};export default jq; const a = 1;export { a }`
     await build(
       config(code, (code) => {
         expect(code).toBe(`const jq = function(){};export default jq; const a = 1;jq.a = a`)
+      })
+    )
+  })
+
+  it('export { jq as default, a }', async () => {
+    const code = `const jq = function(){};const a = 1;export { jq as default, a };`
+    await build(
+      config(code, (code) => {
+        expect(code).toBe(`const jq = function(){};const a = 1;export { jq as default };\r\njq.a = a`)
       })
     )
   })

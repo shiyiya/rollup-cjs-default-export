@@ -39,21 +39,37 @@ export function plugin(): Plugin {
         sourceType: 'module',
       })
 
+      const gen: string[] = []
+      const s = new MagicString(code)
+
       let hostName: string | undefined
       let exports: (ExportNamedDeclaration | ExportAllDeclaration)[] = []
 
       for (const node of body) {
         if (node.type == ExpType.ExportDefaultDeclaration) {
-          hostName = (node.declaration as any).name
-        } else if (node.type == ExpType.ExportNamedDeclaration || node.type == ExpType.ExportAllDeclaration) {
+          hostName = (node.declaration as Identifier).name
+        } else if (node.type == ExpType.ExportAllDeclaration) {
+          exports.push(node)
+        } else if (node.type == ExpType.ExportNamedDeclaration) {
+          const { specifiers } = node
+          // export { name as default, name }
+          const withoutDefaultNamedDeclaration = specifiers.filter(({ exported, local, start, end }) => {
+            if (exported.type == 'Identifier' && local.type == 'Identifier' && exported.name == 'default') {
+              hostName = local.name
+              s.remove(start, end)
+              gen.push(`export { ${local.name} as default };`)
+              return false
+            }
+
+            return true
+          })
+          node.specifiers = withoutDefaultNamedDeclaration
           exports.push(node)
         }
       }
 
-      if (!hostName) return null
-
-      let gen: string[] = []
-      const s = new MagicString(code)
+      // no default exported
+      if (!hostName) return
 
       exports.map((node) => {
         // @ts-ignore
@@ -104,6 +120,10 @@ export function plugin(): Plugin {
         code: s.toString(),
         map: s.generateMap(),
       }
+    },
+
+    buildEnd() {
+      entry = []
     },
   }
 }
