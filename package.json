@@ -6,11 +6,11 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
     }
   },
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
@@ -19,7 +19,8 @@
     "url": "https://github.com/shiyiya/vite-plugin-merge-exports"
   },
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "build": "tsc"
   },
   "keywords": [
     "vite"
@@ -29,7 +30,7 @@
     "@types/node": "^18.19.32",
     "@types/resolve": "^1.20.5",
     "rollup": "^4.4.0",
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.5",
     "vite": "^5.2.11",
     "vitest": "^1.6.0"
   },

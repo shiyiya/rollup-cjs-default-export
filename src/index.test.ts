@@ -2,29 +2,30 @@ import { Plugin, UserConfig, build } from 'vite'
 import { describe, expect, it } from 'vitest'
 import { plugin } from '.'
 
-const mockEntry = (code) => ({
-  name: 'mockEntry',
-  enforce: 'pre',
-  resolveId(id) {
-    return id
-  },
-  load(id, options) {
-    if (id.endsWith('virtual:module')) {
-      return code
-    }
-  },
-})
+const mockEntry = (code: string) =>
+  <Plugin>{
+    name: 'mockEntry',
+    enforce: 'pre',
+    resolveId(id) {
+      return id
+    },
+    load(id, options) {
+      if (id.endsWith('virtual:module')) {
+        return code
+      }
+    },
+  }
 
 const resolveBundle = (cb: (code: string) => void) =>
-  ({
+  <Plugin>{
     name: 'resolveBundle',
     enforce: 'post',
     transform(code, id, options) {
       cb(code)
     },
-  } as Plugin)
+  }
 
-const config = (code: string, cb: any) =>
+const config = (code: string, cb: (code: string) => void) =>
   ({
     logLevel: 'silent',
     build: {
